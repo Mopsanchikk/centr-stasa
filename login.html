@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8445F2">
+<title>Вхід · Центр монтажу</title>
+<link rel="icon" href="img/ava.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@500;700;800&display=swap&subset=cyrillic" rel="stylesheet">
+<script>try{var t=localStorage.getItem("centr2-tema");document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"night":"day")}catch(e){document.documentElement.dataset.theme="day"}</script>
+<link rel="stylesheet" href="css/centr2.css">
+<script src="js/config.js"></script>
+<style>
+  .login{min-height:100dvh;display:grid;place-items:center;padding:20px}
+  .login form{width:min(420px,100%);display:grid;gap:10px}
+  .login label{font-weight:700;font-size:13px;color:var(--soft);margin-top:6px}
+  .login input{font:500 16px var(--t);width:100%;border:1.5px solid var(--ln);border-radius:var(--rc);padding:12px 14px;background:var(--sh);color:var(--ink);min-height:46px}
+  .login input:focus{outline:none;border-color:var(--ink)}
+  .login .btn{margin-top:12px;width:100%}
+  .login .err{color:var(--bad);font-weight:700;min-height:20px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="login">
+  <form class="card" id="form" autocomplete="on">
+    <div class="brand" style="display:flex;padding:0;margin-bottom:8px"><span class="logo">С</span><div><b>Центр монтажу</b><span>Стас</span></div></div>
+    <h1 style="font-size:28px">Вхід</h1>
+    <p class="muted" style="margin:0">Твоя пошта і пароль.</p>
+    <label for="mail">Пошта</label>
+    <input id="mail" type="email" required autocomplete="username">
+    <label for="pw">Пароль</label>
+    <input id="pw" type="password" required autocomplete="current-password">
+    <button class="btn main" type="submit">Увійти</button>
+    <div class="err" id="err" role="status"></div>
+  </form>
+</div>
+<script type="module">
+import { api } from './js/api.js';
+const next = new URLSearchParams(location.search).get('next');
+const go = () => location.replace(next && /^review\.html\?id=[0-9a-f-]{36}$/.test(next) ? next : 'index.html');
+if (await api.user().catch(() => null)) go();
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.textContent = '';
+  try { await api.signIn(document.getElementById('mail').value.trim(), document.getElementById('pw').value); go(); }
+  catch (x) { err.textContent = /invalid/i.test(x.message) ? 'Неправильна пошта або пароль.' : x.message; }
+});
+</script>
+</body>
+</html>
