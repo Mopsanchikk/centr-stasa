@@ -75,11 +75,27 @@ export const api = {
   async fileUrl(ver) { if (!ver) return ''; return (await signed([ver.storage_path]))[ver.storage_path] || ''; },
   async thumbUrl(ver) { if (!ver) return ''; return (await signed([ver.storage_path + '.jpg']))[ver.storage_path + '.jpg'] || ''; },
 
+  // сценарії з папок роликів (лише на ПК)
   async scripts() {
-    if (LOCAL) { try { return await localJson('/api/scripts'); } catch (e) { /* далі база */ } }
+    if (!LOCAL) return [];
+    try { return await localJson('/api/scripts'); } catch (e) { return []; }
+  },
+  // ідеї від Сценариста (таблиця scripts)
+  async ideas() {
     const c = await client();
-    const rows = check(await c.from('scripts').select('*').order('updated_at', { ascending: false }));
-    return rows.map((s) => ({ title: s.title, status: s.status === 'recorded' ? 'Знято' : s.status === 'ready' ? 'Готовий' : 'Ідея', text: s.body || '', updated_at: s.updated_at }));
+    return check(await c.from('scripts').select('*').is('archived_at', null).order('saved', { ascending: false }).order('created_at', { ascending: false }));
+  },
+  async updateIdea(id, patch) { const c = await client(); return check(await c.from('scripts').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id).select().single()); },
+  async askIdea(id, action) {
+    const c = await client();
+    const cur = check(await c.from('scripts').select('pending').eq('id', id).single()).pending || [];
+    if (cur.some((p) => p.action === action)) return;
+    return api.updateIdea(id, { pending: [...cur, { action, at: new Date().toISOString() }] });
+  },
+  async addIdea(text) {
+    const c = await client();
+    const title = text.split(/[.!?\n]/)[0].slice(0, 60);
+    return check(await c.from('scripts').insert({ title, body: text, source: 'manual', pending: [{ action: 'idea', at: new Date().toISOString() }] }).select().single());
   },
   async stats() {
     if (LOCAL) { try { return await localJson('/api/stats'); } catch (e) { /* немає */ } }
