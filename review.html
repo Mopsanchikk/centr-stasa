@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8445F2">
+<title>Перевірка · Центр Стаса</title>
+<link rel="icon" href="img/ava.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@500;700;800&display=swap&subset=cyrillic" rel="stylesheet">
+<script>try{var t=localStorage.getItem("centr2-tema");document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"night":"day")}catch(e){document.documentElement.dataset.theme="day"}</script>
+<link rel="stylesheet" href="css/centr2.css">
+<script src="js/config.js"></script>
+</head>
+<body>
+<main style="margin:0 auto">
+  <div class="row" style="justify-content:space-between;margin-bottom:10px"><a class="brand" href="index.html#home" style="display:flex"><span class="logo">С</span><b>Центр монтажу</b></a>
+    <div class="temy"><button class="tema tema-day" data-tema="day" aria-label="Денна тема"></button><button class="tema tema-night" data-tema="night" aria-label="Нічна тема"></button></div></div>
+  <p><a href="index.html#videos">← До відео</a></p>
+  <div class="row" style="justify-content:space-between;margin-bottom:18px">
+    <div><h1 id="title">…</h1><div class="row small muted"><span id="status"></span><span id="when"></span></div></div>
+    <div class="row">
+      <button class="btn quiet" data-st="pravky">Потрібні правки</button>
+      <button class="btn main" data-st="zatverdzheno">Схвалити</button>
+    </div>
+  </div>
+  <div class="rv">
+    <div>
+      <div class="player"><video id="video" controls playsinline preload="none"></video></div>
+      <p class="note" id="nofile" hidden>Це відео вже опубліковане, тому його файлу немає в безкоштовному сховищі. Оригінал лежить на ПК.</p>
+      <div class="tl" id="tl"><div class="bar"></div><div class="pos" id="pos"></div></div>
+      <div class="row small muted" style="margin-top:6px">
+        <select id="ver" style="width:auto;min-height:42px"></select>
+        <button class="chip" id="back">−1 кадр</button><button class="chip" id="fwd">+1 кадр</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px">Коментарі</h3>
+      <div class="small muted" style="margin:2px 0 10px">Постав відео на паузу в потрібному місці й напиши, що змінити. Час додасться сам.</div>
+      <textarea id="text" rows="3" placeholder="Напр.: тут вирізати «мг»"></textarea>
+      <div class="row" style="justify-content:space-between;margin-top:8px">
+        <span class="small muted">на <b id="at">0:00.0</b></span><button class="btn" id="add">Додати коментар</button>
+      </div>
+      <div id="list" style="margin-top:12px"></div>
+    </div>
+  </div>
+</main>
+<script type="module" src="js/review.js"></script>
+</body>
+</html>
