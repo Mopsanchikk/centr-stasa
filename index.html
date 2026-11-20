@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8445F2">
+<title>Центр монтажу · Стас</title>
+<link rel="icon" href="img/ava.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@500;700;800&display=swap&subset=cyrillic" rel="stylesheet">
+<script>try{var t=localStorage.getItem("centr2-tema");document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"night":"day")}catch(e){document.documentElement.dataset.theme="day"}</script>
+<link rel="stylesheet" href="css/centr2.css">
+<script src="js/config.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="#home"><span class="logo">С</span><div><b>Центр монтажу</b><span>Стас</span></div></a>
+    <nav class="nav" id="nav">
+      <a href="#home" data-p="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span class="lbl">Головна</span></a>
+      <a href="#videos" data-p="videos"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5v5l4-2.5z"/></svg><span class="lbl">Відео</span></a>
+      <a href="#approve" data-p="approve"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></svg><span class="lbl">Схвалення</span><span class="badge" id="nApprove" hidden></span></a>
+      <a href="#queue" data-p="queue"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">Черга</span></a>
+      <a href="#scripts" data-p="scripts"><svg viewBox="0 0 24 24"><path d="M5 3.5h10l4 4v13H5z"/><path d="M14.5 3.5v4.5H19M8.5 13h7M8.5 16.5h5"/></svg><span class="lbl">Сценарії</span></a>
+      <a href="#stats" data-p="stats"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/></svg><span class="lbl">Статистика</span></a>
+      <a href="#profile" data-p="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.2-4 4-5.5 7.5-5.5s6.3 1.5 7.5 5.5"/></svg><span class="lbl">Профіль</span></a>
+    </nav>
+    <div class="bottom"><span class="small muted">Тема</span>
+      <div class="temy"><button class="tema tema-day" data-tema="day" title="День" aria-label="Денна тема"></button><button class="tema tema-night" data-tema="night" title="Ніч" aria-label="Нічна тема"></button></div></div>
+  </aside>
+  <main>
+    <div class="mob-top"><a class="brand" href="#home"><span class="logo">С</span><b>Центр монтажу</b></a>
+      <div class="temy"><button class="tema tema-day" data-tema="day" aria-label="Денна тема"></button><button class="tema tema-night" data-tema="night" aria-label="Нічна тема"></button></div></div>
+    <div id="main"></div>
+  </main>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
