@@ -97,6 +97,11 @@ export const api = {
     const title = text.split(/[.!?\n]/)[0].slice(0, 60);
     return check(await c.from('scripts').insert({ title, body: text, source: 'manual', pending: [{ action: 'idea', at: new Date().toISOString() }] }).select().single());
   },
+  async tiktok() {
+    const c = await client();
+    const { data } = await c.from('social_snapshot').select('data, updated_at').eq('platform', 'tiktok').maybeSingle();
+    return data?.data || null;
+  },
   async stats() {
     if (LOCAL) { try { return await localJson('/api/stats'); } catch (e) { /* немає */ } }
     return { columns: [], rows: [] };
