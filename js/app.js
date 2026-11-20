@@ -7,6 +7,7 @@ const main = document.getElementById('main');
 let videos = [];
 let filter = 'all';
 let user = null;
+let ideasCache = [];
 
 const thumb = (v) => v.thumb ? `style="background-image:url('${v.thumb}')"` : '';
 const open = (v) => `review.html?id=${encodeURIComponent(v.id)}`;
@@ -79,12 +80,42 @@ const screens = {
   },
 
   async scripts() {
-    const list = await api.scripts();
-    return `<h1>Сценарії</h1><p class="muted">Сценарії з папок роликів. Нові ідеї з'являтимуться тут із чату «Сценарії».</p>
-      ${list.length ? `<div class="list">${list.map((s) => `<details class="card sc"><summary class="row" style="justify-content:space-between;flex-wrap:nowrap">
-          <div><b>${esc(s.title)}</b><div class="small muted">${esc((s.status.split(/[.(]/)[0].trim().replace(/^ПІДТВЕРДЖЕНО/, 'Підтверджено') || 'Без статусу'))} · ${fmtDate(s.updated_at)}</div></div><span class="arr">▾</span></summary>
-          <pre class="script">${esc(s.text.replace(/^#.*\n+/, '').replace(/\*\*/g, ''))}</pre></details>`).join('')}</div>`
-        : '<div class="card empty">Сценаріїв ще немає.</div>'}`;
+    const [ideas, files] = await Promise.all([api.ideas(), api.scripts()]);
+    ideasCache = ideas;
+    const RUB = { ekspert: 'Експерт', mif: 'Міф / правда', novyna: 'Новина', osobyste: 'Особисте', pytannia: 'Питання глядачів', eksperyment: 'Експеримент' };
+    const ASK = { expand: 'розгорнути', rehook: 'нові хуки', addhook: '+ хук', idea: 'розгорнути ідею' };
+    const idea = (x) => {
+      const hooks = Array.isArray(x.hooks) ? x.hooks : [];
+      const main = hooks.find((h) => h.main) || hooks[0];
+      const pend = (x.pending || []).map((p) => ASK[p.action] || p.action);
+      return `<details class="card sc idea${x.verdict === 'nope' ? ' nope' : ''}" data-idea="${x.id}"><summary class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start">
+        <div><div class="row" style="gap:6px;margin-bottom:6px">${x.saved ? '<span class="tag zatverdzheno">⭐ Збережено</span>' : ''}${x.rubric ? `<span class="tag montazh">${esc(RUB[x.rubric] || x.rubric)}</span>` : ''}
+          ${x.status === 'recorded' ? '<span class="tag perevirka">Знято</span>' : ''}${pend.length ? `<span class="tag demo">Сценарист: ${esc(pend.join(', '))}</span>` : ''}</div>
+          <b>${esc(x.title || 'Ідея')}</b>${main ? `<div class="hook">«${esc(main.say || main.text || '')}»</div>` : ''}</div><span class="arr">▾</span></summary>
+        ${hooks.length ? `<div class="sub">Хуки</div>${hooks.map((h, i) => `<div class="hk"><b>${i + 1}.</b> ${esc(h.say || '')}${h.text ? `<div class="small muted">Напис: ${esc(h.text)}</div>` : ''}${h.shot ? `<div class="small muted">У кадрі: ${esc(h.shot)}</div>` : ''}</div>`).join('')}` : ''}
+        ${x.body ? `<div class="sub">${x.kind === 'full' ? 'Сценарій' : 'Суть'}</div><pre class="script">${esc(x.body)}</pre>` : ''}
+        ${(x.why || []).length ? `<div class="sub">Чому має зайти</div>${x.why.map((w) => `<div class="small">• ${esc(w.fact || '')}${w.url ? ` <a href="${esc(w.url)}" target="_blank" rel="noopener">джерело</a>` : ''}</div>`).join('')}` : ''}
+        ${x.shoot_hint ? `<div class="sub">Де знімати</div><div class="small">${esc(x.shoot_hint)}</div>` : ''}
+        <div class="row" style="margin-top:16px">
+          <button class="btn ${x.saved ? 'main' : ''}" data-act="save">${x.saved ? '⭐ Збережено' : '⭐ Зберегти'}</button>
+          <button class="btn quiet" data-act="nope">✖ Не те</button>
+          <button class="btn quiet" data-act="expand">Розгорнути</button>
+          <button class="btn quiet" data-act="rehook">Переробити хук</button>
+          ${x.body || hooks.length ? '<button class="btn quiet" data-act="prompter">Суфлер</button>' : ''}
+          <button class="btn quiet" data-act="recorded">${x.status === 'recorded' ? 'Знято ✓' : 'Зняв'}</button>
+        </div></details>`;
+    };
+    const live = ideas.filter((x) => x.verdict !== 'nope');
+    const nope = ideas.filter((x) => x.verdict === 'nope');
+    return `<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h1>Сценарії</h1>
+        <p class="muted" style="margin:0">Ідеї від Сценариста. ⭐ — подобається, ✖ — ні: він на цьому вчиться.</p></div>
+        <button class="btn main" id="newIdea">💡 Ідея</button></div>
+      <div style="margin-top:18px">${live.length ? `<div class="list">${live.map(idea).join('')}</div>`
+        : '<div class="card empty">Ідей ще немає. Відкрий ярлик «Сценарист» на Робочому столі: він поставить питання і зробить першу пачку.</div>'}</div>
+      ${nope.length ? `<details style="margin-top:16px"><summary class="muted" style="cursor:pointer">Відкинуті (${nope.length})</summary><div class="list" style="margin-top:12px">${nope.map(idea).join('')}</div></details>` : ''}
+      ${files.length ? `<h2>Сценарії роликів</h2><div class="list">${files.map((f) => `<details class="card sc"><summary class="row" style="justify-content:space-between;flex-wrap:nowrap">
+          <div><b>${esc(f.title)}</b><div class="small muted">${esc((f.status.split(/[.(]/)[0].trim().replace(/^ПІДТВЕРДЖЕНО/, 'Підтверджено') || 'Без статусу'))} · ${fmtDate(f.updated_at)}</div></div><span class="arr">▾</span></summary>
+          <pre class="script">${esc(f.text.replace(/^#.*\n+/, '').replace(/\*\*/g, ''))}</pre></details>`).join('')}</div>` : ''}`;
   },
 
   async stats() {
@@ -126,6 +157,30 @@ async function render() {
 
 main.addEventListener('click', async (e) => {
   if (e.target.id === 'logout') return api.signOut();
+  if (e.target.id === 'newIdea') {
+    const text = prompt('Твоя ідея (можна кількома реченнями). Сценарист розгорне її в сценарій:');
+    if (!text || !text.trim()) return;
+    try { await api.addIdea(text.trim()); toast('Записав. Сценарист розгорне.'); } catch (err) { toast(err.message); }
+    return render();
+  }
+  const act = e.target.closest('[data-act]');
+  if (act) {
+    e.preventDefault();
+    const id = act.closest('[data-idea]').dataset.idea;
+    const x = ideasCache.find((i) => i.id === id);
+    const a = act.dataset.act;
+    try {
+      if (a === 'prompter') return prompter(x);
+      if (a === 'save') await api.updateIdea(id, { saved: !x.saved, verdict: x.saved ? null : 'take' });
+      if (a === 'nope') { const why = prompt('Чому не те? (можна пропустити)') ?? ''; await api.updateIdea(id, { saved: false, verdict: 'nope', verdict_reason: why.trim() || null }); }
+      if (a === 'expand' || a === 'rehook') { await api.askIdea(id, a); toast('Передав Сценаристу'); }
+      if (a === 'recorded') await api.updateIdea(id, { status: x.status === 'recorded' ? 'idea' : 'recorded' });
+    } catch (err) { toast(err.message); }
+    const open = [...document.querySelectorAll('[data-idea][open]')].map((d) => d.dataset.idea);
+    await render();
+    open.forEach((oid) => document.querySelector(`[data-idea="${oid}"]`)?.setAttribute('open', ''));
+    return;
+  }
   const f = e.target.closest('[data-f]');
   if (f) { filter = f.dataset.f; return render(); }
   const st = e.target.closest('[data-st]');
@@ -136,6 +191,19 @@ main.addEventListener('click', async (e) => {
     render();
   }
 });
+
+function prompter(x) {
+  const hooks = Array.isArray(x.hooks) ? x.hooks : [];
+  const main = hooks.find((h) => h.main) || hooks[0];
+  const d = document.createElement('div');
+  d.className = 'prompter';
+  d.innerHTML = `<button class="btn" id="pClose">Закрити</button><div class="pz">
+    ${main ? `<div class="ph">ХУК</div><p class="pt hookline">${esc(main.say || main.text || '')}</p>` : ''}
+    ${hooks.filter((h) => h !== main).map((h, i) => `<div class="ph">ДУБЛЬ ХУКА ${i + 2}</div><p class="pt">${esc(h.say || h.text || '')}</p>`).join('')}
+    ${x.body ? `<div class="ph">ТЕКСТ</div><p class="pt">${esc(x.body).replace(/\n/g, '<br>')}</p>` : ''}</div>`;
+  document.body.append(d);
+  d.querySelector('#pClose').onclick = () => d.remove();
+}
 
 addEventListener('hashchange', render);
 user = await api.requireUser();
