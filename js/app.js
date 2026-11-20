@@ -119,11 +119,26 @@ const screens = {
   },
 
   async stats() {
-    const s = await api.stats();
-    return `<h1>Статистика</h1><p class="muted">Поки цифри вносимо вручну (ти кажеш, я записую). Після підключення Instagram вони підтягуватимуться самі, а світлофор підкаже, що робити далі.</p>
-      ${s.rows.length ? `<div class="card scroll"><table class="t"><tr>${s.columns.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>
-        ${s.rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`
-        : `<div class="card empty">${api.local ? 'Цифр ще немає.' : 'Ручна статистика лежить на ПК. Відкрий Центр на комп’ютері або дочекайся підключення Instagram.'}</div>`}`;
+    const [s, tt] = await Promise.all([api.stats(), api.tiktok().catch(() => null)]);
+    let ttHtml = '<div class="card empty">Дані TikTok ще не завантажились. Вони оновлюються самі кожні 6 годин, коли ПК увімкнений.</div>';
+    if (tt && tt.videos?.length) {
+      const views = tt.videos.map((v) => v.views || 0).sort((a, b) => a - b);
+      const med = views[Math.floor(views.length / 2)] || 0;
+      const light = (n) => (n >= med * 1.5 ? '🟢' : n < med * 0.6 ? '🔴' : '🟡');
+      const n = (x) => (x ?? '—').toLocaleString('uk-UA');
+      ttHtml = `<div class="tiles" style="margin-top:0"><div class="tile"><div class="n">${tt.videos.length}</div><div class="l">Відео</div></div>
+          <div class="tile"><div class="n">${n(med)}</div><div class="l">Типові перегляди</div></div>
+          <div class="tile"><div class="n">${n(Math.max(...views))}</div><div class="l">Найкраще відео</div></div></div>
+        <p class="small muted">🟢 у 1,5 раза вище за твої типові перегляди · 🟡 близько · 🔴 нижче. Оновлено ${new Date(tt.fetched_at).toLocaleString('uk-UA', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}.</p>
+        <div class="card scroll"><table class="t"><tr><th></th><th>Дата</th><th>Відео</th><th>Перегляди</th><th>Лайки</th><th>Коментарі</th><th>Репости</th></tr>
+        ${tt.videos.map((v) => `<tr><td>${light(v.views || 0)}</td><td>${v.published ? new Date(v.published).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' }) : ''}</td>
+          <td style="white-space:normal;min-width:180px"><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc((v.title || '').slice(0, 60))}</a></td>
+          <td><b>${n(v.views)}</b></td><td>${n(v.likes)}</td><td>${n(v.comments)}</td><td>${n(v.shares)}</td></tr>`).join('')}</table></div>`;
+    }
+    return `<h1>Статистика</h1><p class="muted">TikTok підтягується сам. Час перегляду й утримання TikTok віддає лише в TikTok Studio.</p>
+      <h2>TikTok</h2>${ttHtml}
+      ${s.rows.length ? `<h2>Instagram (вручну)</h2><div class="card scroll"><table class="t"><tr>${s.columns.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>
+        ${s.rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : ''}`;
   },
 
   profile() {
@@ -137,7 +152,8 @@ const screens = {
       <div class="card"><div class="slot"><div class="when">База</div><div>Supabase (безкоштовно): відео, правки, черга</div><span class="tag zatverdzheno">Працює</span></div>
         <div class="slot"><div class="when">Telegram</div><div>@montage_clode_bot: «Схвалити / Правки / Відхилити», коли ПК увімкнений</div><span class="tag zatverdzheno">Працює</span></div>
         <div class="slot"><div class="when">Сайт</div><div>Центр з телефона за адресою https://…</div><span class="tag">Етап 3</span></div>
-        <div class="slot"><div class="when">Instagram</div><div>Автопублікація лише після твого «Схвалити»</div><span class="tag">Етап 5</span></div></div>`;
+        <div class="slot"><div class="when">Instagram</div><div>Автопублікація лише після твого «Схвалити»</div><span class="tag">Етап 5</span></div>
+        <div class="slot"><div class="when">TikTok</div><div>Статистика з публічної сторінки, кожні 6 год</div><span class="tag zatverdzheno">Працює</span></div></div>`;
   },
 };
 
