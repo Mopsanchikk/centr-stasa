@@ -216,9 +216,56 @@ function prompter(x) {
   d.innerHTML = `<button class="btn" id="pClose">Закрити</button><div class="pz">
     ${main ? `<div class="ph">ХУК</div><p class="pt hookline">${esc(main.say || main.text || '')}</p>` : ''}
     ${hooks.filter((h) => h !== main).map((h, i) => `<div class="ph">ДУБЛЬ ХУКА ${i + 2}</div><p class="pt">${esc(h.say || h.text || '')}</p>`).join('')}
-    ${x.body ? `<div class="ph">ТЕКСТ</div><p class="pt">${esc(x.body).replace(/\n/g, '<br>')}</p>` : ''}</div>`;
+    ${x.body ? `<div class="ph">ТЕКСТ</div><p class="pt">${esc(x.body).replace(/\n/g, '<br>')}</p>` : ''}<div class="pend"></div></div>
+    <div class="pbar">
+      <button class="btn" id="pTop" title="На початок">⏮ На початок</button>
+      <button class="btn pri" id="pGo">▶ Старт</button>
+      <label class="pspd">Швидкість <input type="range" id="pSpd" min="10" max="150" step="5"><b id="pSpdV"></b></label>
+    </div>
+    <div class="pcount" id="pCnt"></div>`;
   document.body.append(d);
-  d.querySelector('#pClose').onclick = () => d.remove();
+  // Автопрокрутка як у телесуфлері. Швидкість (пікселів за секунду) запам'ятовується.
+  const KEY = 'centr2-suf-speed';
+  const go = d.querySelector('#pGo'), spd = d.querySelector('#pSpd'), spdV = d.querySelector('#pSpdV'), cnt = d.querySelector('#pCnt');
+  const ls = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* без збереження */ } } };
+  spd.value = ls.get(KEY) || 40;
+  const showSpd = () => { spdV.textContent = spd.value; };
+  showSpd();
+  spd.oninput = () => { ls.set(KEY, spd.value); showSpd(); };
+  let run = false, raf = 0, last = 0, acc = 0, timer = 0;
+  const setBtn = () => { go.textContent = run || timer ? '⏸ Пауза' : '▶ Старт'; };
+  const step = (t) => {
+    if (!run) return;
+    if (last) { acc += (t - last) / 1000 * spd.value; const px = Math.floor(acc); if (px) { d.scrollTop += px; acc -= px; } }
+    last = t;
+    if (d.scrollTop + d.clientHeight >= d.scrollHeight - 2) { stop(); return; }
+    raf = requestAnimationFrame(step);
+  };
+  const stop = () => { run = false; cancelAnimationFrame(raf); clearInterval(timer); timer = 0; cnt.style.display = 'none'; setBtn(); };
+  const start = () => {
+    let n = 3; cnt.textContent = n; cnt.style.display = 'flex';
+    timer = setInterval(() => {
+      n--;
+      if (n > 0) { cnt.textContent = n; return; }
+      clearInterval(timer); timer = 0; cnt.style.display = 'none';
+      run = true; last = 0; acc = 0; raf = requestAnimationFrame(step); setBtn();
+    }, 800);
+    setBtn();
+  };
+  go.onclick = (e) => { e.stopPropagation(); (run || timer) ? stop() : start(); };
+  d.querySelector('#pTop').onclick = (e) => { e.stopPropagation(); stop(); d.scrollTop = 0; };
+  d.querySelector('.pz').onclick = () => { if (run || timer) stop(); };   // тап по тексту — пауза
+  // Екран не гасне, поки суфлер відкритий (Wake Lock; повертаємо після згортання вкладки)
+  let lock = null;
+  const wake = async () => { try { if ('wakeLock' in navigator && document.visibilityState === 'visible') lock = await navigator.wakeLock.request('screen'); } catch (e) { /* браузер не дав */ } };
+  const onVis = () => { if (document.visibilityState === 'visible' && document.body.contains(d)) wake(); };
+  wake();
+  document.addEventListener('visibilitychange', onVis);
+  d.querySelector('#pClose').onclick = () => {
+    stop(); document.removeEventListener('visibilitychange', onVis);
+    if (lock) lock.release().catch(() => {});
+    d.remove();
+  };
 }
 
 addEventListener('hashchange', render);
