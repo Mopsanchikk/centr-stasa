@@ -32,14 +32,45 @@
     <label for="pw">Пароль</label>
     <input id="pw" type="password" required autocomplete="current-password">
     <button class="btn main" type="submit">Увійти</button>
+    <button class="btn quiet" type="button" id="forgot" style="margin-top:0">Забули пароль?</button>
     <div class="err" id="err" role="status"></div>
+  </form>
+  <form class="card" id="newpw" style="display:none">
+    <h1 style="font-size:28px">Новий пароль</h1>
+    <p class="muted" style="margin:0">Придумай новий пароль (мінімум 8 символів).</p>
+    <label for="pw1">Новий пароль</label>
+    <input id="pw1" type="password" required minlength="8" autocomplete="new-password">
+    <label for="pw2">Ще раз</label>
+    <input id="pw2" type="password" required minlength="8" autocomplete="new-password">
+    <button class="btn main" type="submit">Зберегти й увійти</button>
+    <div class="err" id="err2" role="status"></div>
   </form>
 </div>
 <script type="module">
 import { api } from './js/api.js';
 const next = new URLSearchParams(location.search).get('next');
 const go = () => location.replace(next && /^review\.html\?id=[0-9a-f-]{36}$/.test(next) ? next : 'index.html');
-if (await api.user().catch(() => null)) go();
+const recovery = /type=recovery/.test(location.hash);   // прийшов за посиланням із листа
+const u = await api.user().catch(() => null);
+if (recovery) {
+  document.getElementById('form').style.display = 'none';
+  document.getElementById('newpw').style.display = '';
+  if (!u) document.getElementById('err2').textContent = 'Посилання застаріло. Натисни «Забули пароль?» ще раз.';
+} else if (u) go();
+document.getElementById('newpw').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err2'), a = document.getElementById('pw1').value, b = document.getElementById('pw2').value;
+  err.textContent = '';
+  if (a !== b) { err.textContent = 'Паролі не збігаються.'; return; }
+  try { await api.setPassword(a); history.replaceState(null, '', location.pathname); go(); }
+  catch (x) { err.textContent = x.message; }
+});
+document.getElementById('forgot').addEventListener('click', async () => {
+  const err = document.getElementById('err'), mail = document.getElementById('mail').value.trim();
+  if (!mail) { err.textContent = 'Спершу впиши пошту вище.'; return; }
+  try { await api.resetPassword(mail); err.style.color = 'var(--ok, #0E9F9A)'; err.textContent = 'Лист надіслано. Відкрий пошту й натисни посилання.'; }
+  catch (x) { err.textContent = /rate|seconds/i.test(x.message) ? 'Зачекай хвилину і спробуй ще раз.' : x.message; }
+});
 document.getElementById('form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const err = document.getElementById('err');
