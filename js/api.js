@@ -46,6 +46,9 @@ export const api = {
     return u;
   },
   async signIn(email, password) { const c = await client(); check(await c.auth.signInWithPassword({ email, password })); },
+  // Відновлення пароля: лист із посиланням на login.html, там Стас сам задає новий пароль.
+  async resetPassword(email) { const c = await client(); check(await c.auth.resetPasswordForEmail(email, { redirectTo: location.href.split(/[?#]/)[0] })); },
+  async setPassword(password) { const c = await client(); check(await c.auth.updateUser({ password })); },
   async signOut() { const c = await client(); await c.auth.signOut(); location.replace('login.html'); },
 
   async videos() {
