@@ -172,3 +172,11 @@ textarea:focus,select:focus,input:focus{outline:none;border-color:var(--ink)}
 .prompter .ph{font:700 13px var(--d);color:#B48CFF;margin:26px 0 8px;letter-spacing:.04em}
 .prompter .pt{font:700 clamp(26px,6vw,40px)/1.35 var(--t);margin:0}
 .prompter .hookline{color:#FFE27A}
+.prompter .pend{height:60vh}
+.prompter .pbar{position:fixed;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(13,8,32,.92);border-top:1px solid #2c2150}
+.prompter .pbar .btn{background:#1d1440;border-color:#5b4a99;color:#fff}
+.prompter .pbar .btn.pri{background:#8445F2;border-color:#8445F2;min-width:120px}
+.prompter .pspd{display:flex;align-items:center;gap:8px;font:700 13px var(--t);color:#cbbdf5}
+.prompter .pspd input{width:150px;accent-color:#B48CFF}
+.prompter .pspd b{min-width:28px;color:#fff}
+.prompter .pcount{position:fixed;inset:0;display:none;align-items:center;justify-content:center;font:700 160px var(--d);color:#B48CFF;background:rgba(13,8,32,.55);pointer-events:none;z-index:61}
